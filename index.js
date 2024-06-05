@@ -27,10 +27,10 @@ const corsOptions = {
 
 
 
+const uri = 
+`mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-upko9jz-shard-00-00.ckoz8fu.mongodb.net:27017,ac-upko9jz-shard-00-01.ckoz8fu.mongodb.net:27017,ac-upko9jz-shard-00-02.ckoz8fu.mongodb.net:27017/?ssl=true&replicaSet=atlas-rkrx6l-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0`;
 
-
-
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ckoz8fu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ckoz8fu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 
 
@@ -48,6 +48,7 @@ async function run() {
 
    
     const usersCollection = client.db('SurveyApp').collection('users')
+    const surveysFormCollection = client.db('SurveyApp').collection('surveysForm')
 
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -83,7 +84,13 @@ async function run() {
       }
       next();
     }
-
+    // surveys form
+    app.post('/surveysForm', async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await surveysFormCollection.insertOne(item);
+      res.send(result);
+    });
      // users related api
      app.get('/users',verifyToken, async (req, res) => {
       const result = await usersCollection.find().toArray();
@@ -136,6 +143,52 @@ async function run() {
       res.send(result)
     })
 
+
+
+
+    // users related api testig purpse------
+    app.get('/surveyor', async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+
+      const result = await surveysFormCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // surveyor single Id display
+    app.get('/surveyor/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await surveysFormCollection.findOne(query);
+      res.send(result);
+    })
+    //  surveyor Update Id display
+    app.patch('/surveyor/:id', async (req, res) => {
+      const item = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+            Description: item.Description,
+            Title: item.Title,
+            deadline: item.deadline,
+            createDate: item.createDate,
+            category: item.category,
+            status: 1,
+            email:item.email,
+            image: item.image
+        }
+      }
+      const result = await surveysFormCollection.updateOne(filter, updatedDoc)
+      res.send(result);
+    })
+    
+
+
+   
+
+
+
     // role change pro-user
     app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id;
@@ -150,7 +203,7 @@ async function run() {
     })
 
 
-
+   
 
 
 
