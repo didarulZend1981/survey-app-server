@@ -6,6 +6,7 @@ const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 const jwt = require('jsonwebtoken')
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000
 
 // middleware
@@ -46,9 +47,12 @@ async function run() {
   try {
  
 
-   
+    
     const usersCollection = client.db('SurveyApp').collection('users')
     const surveysFormCollection = client.db('SurveyApp').collection('surveysForm')
+    const paymentCollection = client.db('SurveyApp').collection('payment')
+
+
 
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -87,7 +91,7 @@ async function run() {
     // surveys form
     app.post('/surveysForm', async (req, res) => {
       const item = req.body;
-      console.log(item);
+      // console.log(item);
       const result = await surveysFormCollection.insertOne(item);
       res.send(result);
     });
@@ -102,7 +106,7 @@ async function run() {
     // save a user data in db
     app.put('/user', async (req, res) => {
       const user = req.body
-      console.log(user);
+      // console.log(user);
       const query = { email: user?.email }
       // check if user already exists in db
       const isExist = await usersCollection.findOne(query)
@@ -184,6 +188,11 @@ async function run() {
     })
     
 
+    // All surveyor data get
+     app.get('/all/surveyor', async (req, res) => {
+      const result = await surveysFormCollection.find().toArray();
+      res.send(result);
+    });
 
    
 
@@ -210,7 +219,7 @@ async function run() {
 
     app.post('/user', async (req, res) => {
       const user = req.body;
-      console.log(user)
+      // console.log(user)
       // insert email if user doesnt exists: 
       // you can do this many ways (1. email unique, 2. upsert 3. simple checking)
       const query = { email: user.email }
@@ -221,7 +230,54 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
+
+
+
+    // payment intent
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      console.log(amount, 'amount inside the intent')
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    });
+
+
+    app.post('/payments', async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+
+      //  carefully delete each item from the cart
+      console.log('payment info', payment);
+      // const query = {
+      //   _id: {
+      //     $in: payment.cartIds.map(id => new ObjectId(id))
+      //   }
+      // };
+
+      // const deleteResult = await cartCollection.deleteMany(query);
+
+      res.send({ paymentResult});
+    })
+
+
+
     // Send a ping to confirm a successful connection
+
+
+
+
+
+
+
     await client.db('admin').command({ ping: 1 })
     console.log(
       'Pinged your deployment. You successfully connected to MongoDB!'
