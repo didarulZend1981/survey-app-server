@@ -135,3 +135,16 @@ const CheckoutForm = () => {
 };
 
 export default CheckoutForm;
+
+
+
+// servey Voting form
+app.post('/serveyVoting', async (req, res) => {
+    const item = req.body;
+    // console.log(item);
+    const result = await serveyVotingCollection.insertOne(item);
+    res.send(result);
+  });
+
+
+  const menuRes = await axiosPublic.post('/surveysForm', formItem);

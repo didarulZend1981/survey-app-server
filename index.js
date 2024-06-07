@@ -51,6 +51,7 @@ async function run() {
     const usersCollection = client.db('SurveyApp').collection('users')
     const surveysFormCollection = client.db('SurveyApp').collection('surveysForm')
     const paymentCollection = client.db('SurveyApp').collection('payment')
+    const serveyVotingCollection = client.db('SurveyApp').collection('serveyVoting')
 
 
 
@@ -280,6 +281,25 @@ async function run() {
     })
 
 
+
+
+    //surveys form letest 6
+    app.get('/letest/surveyor', async (req, res) => {
+      const result = await surveysFormCollection.find().sort({ createDate: -1 }).limit(6).toArray();
+      res.send(result);
+      console.log(result);
+    });
+
+
+
+
+    // servey Voting form
+    app.post('/serveyVoting', async (req, res) => {
+        const item = req.body;
+        // console.log(item);
+        const result = await serveyVotingCollection.insertOne(item);
+        res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
 
