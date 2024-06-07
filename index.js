@@ -219,7 +219,7 @@ async function run() {
 
     app.post('/user', async (req, res) => {
       const user = req.body;
-      // console.log(user)
+      console.log(user)
       // insert email if user doesnt exists: 
       // you can do this many ways (1. email unique, 2. upsert 3. simple checking)
       const query = { email: user.email }
@@ -237,7 +237,7 @@ async function run() {
     app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100);
-      console.log(amount, 'amount inside the intent')
+     // console.log(amount, 'amount inside the intent')
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -253,19 +253,30 @@ async function run() {
 
     app.post('/payments', async (req, res) => {
       const payment = req.body;
+      
       const paymentResult = await paymentCollection.insertOne(payment);
+      const email= payment.email;
+      const query = { email: payment.email };
+      console.log("checke----payment email",query);
+      // const result = await usersCollection.find(query);
+      // console.log("user-------",result)
+      //  res.send(result)
 
-      //  carefully delete each item from the cart
-      console.log('payment info', payment);
-      // const query = {
-      //   _id: {
-      //     $in: payment.cartIds.map(id => new ObjectId(id))
-      //   }
-      // };
+        // console.log(result);
+        const result = await usersCollection.findOne(query);
 
-      // const deleteResult = await cartCollection.deleteMany(query);
+        
 
-      res.send({ paymentResult});
+        const filter = await usersCollection.findOne(result._id);
+        const updatedDoc = {
+          $set: {
+            role: 'pro-user'
+          }
+        }
+        const role = await usersCollection.updateOne(filter, updatedDoc);
+        // res.send(result);
+
+       res.send({paymentResult,role});
     })
 
 
