@@ -301,6 +301,62 @@ async function run() {
         res.send(result);
     });
 
+// Vote Collection----
+    app.get('/vote/collection', async (req, res) => {
+      try {
+         
+          const topSex = [
+              { $group: { _id: "$SurveyID", vote: { $sum: 1 } } },
+              { $sort: { vote: -1 } },
+              { $limit: 6 }
+          ];
+  
+          const topSellingFoodItems = await serveyVotingCollection.aggregate(topSex).toArray();
+          res.json(topSellingFoodItems);
+      } catch (error) {
+          console.error('Error:', error);
+          res.status(500).send('Internal Server Error');
+      }
+  });
+
+
+
+  //  // get a user info by email from db
+
+
+
+
+  
+  app.get('/vote/collect/:id', async (req, res) => {
+   
+
+    try {
+        
+       const SurveyID = req.params.id
+       const query = { SurveyID: SurveyID,vote:1 }
+       const yes = await serveyVotingCollection.find(query).toArray();
+      //  const queryNo = { SurveyID: SurveyID,vote:0 }
+      //  const no = await serveyVotingCollection.find(queryNo).toArray();
+      
+      
+      res.send(yes);
+       
+  
+      } catch (error) {
+
+          console.error('Error:', error);
+          res.status(500).send('Internal Server Error');
+      }
+
+})
+
+
+
+
+
+
+
+
     // Send a ping to confirm a successful connection
 
 
