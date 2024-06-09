@@ -285,6 +285,8 @@ async function run() {
 
     //surveys form letest 6
     app.get('/letest/surveyor', async (req, res) => {
+      
+      
       const result = await surveysFormCollection.find().sort({ createDate: -1 }).limit(6).toArray();
       res.send(result);
       console.log(result);
@@ -296,8 +298,31 @@ async function run() {
     // servey Voting form
     app.post('/serveyVoting', async (req, res) => {
         const item = req.body;
-        // console.log(item);
+        console.log(item);
+        const filter = { _id: new ObjectId(item.SurveyID)}
+        const survey = await surveysFormCollection.findOne(filter);
+        const countVote =survey.totalVotes+1;
+        // console.log(countVote);
+        
+        // const filter = await surveysFormCollection.findOne(item.SurveyID);
+        const updatedDoc = {
+          $set: {
+            totalVotes: countVote
+          }
+        }
+        
+        //filter ke  _id serch
+        const totalVotes = await surveysFormCollection.updateOne(filter, updatedDoc);
+
+
+
+
+        console.log(countVote);
+
+        // await survey.save();
+        // res.json(survey);
         const result = await serveyVotingCollection.insertOne(item);
+
         res.send(result);
     });
 
@@ -319,6 +344,16 @@ async function run() {
       }
   });
 
+
+//   app.get('/foodEmail', async (req, res) => {
+//     console.log(req.query.email);
+//     let query = {};
+//     if (req.query?.email) {
+//         query = { email: req.query.email }
+//     }
+//     const result = await foodsCollection.find(query).toArray();
+//     res.send(result);
+// })
 
 
   //  // get a user info by email from db
@@ -351,6 +386,81 @@ async function run() {
 })
 
 
+// users related api testig purpse------
+app.get('/allSuryesPage', async (req, res) => {
+
+  // http://localhost:5000/allSuryesPage?category=value&sort=value
+ 
+  const sort =req.query.sort==="asc"? { totalVotes: -1 } : {};
+
+
+
+//checking -----okey
+  const category = req.query.category;
+  const query = category?{ category: category }:{};
+  const result = await surveysFormCollection.find(query).sort(sort).toArray();
+ 
+  // 
+
+  // const result = await surveysFormCollection.find().sort(sort).toArray();
+
+  // const category = req.query.category;
+  // const query = { category: category };
+  // const sort =req.query.sort;
+  // const result = await surveysFormCollection.find(query).sort({totalVotes:-1}).toArray();
+  
+  
+  res.send(result);
+  console.log(result);
+});
+
+// Get surveys with filtering and sorting
+app.get('/surveys', async (req, res) => {
+  try {
+    const { category, sort } = req.query;
+    console.log(category)
+    let filter = {};
+    if (category) {
+      filter.category = category;
+    }
+
+    let sortOption = {};
+    if (sort) {
+      sortOption.totalVotes = sort === 'asc' ? 1 : -1;
+    }
+
+    const surveys = await surveysFormCollection.find(filter).sort(sortOption);
+    res.json(surveys);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+// Increment totalVotes for a survey
+app.post('/surveys/:id/vote', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const survey = await Survey.findById(id);
+    if (!survey) {
+      return res.status(404).send('Survey not found');
+    }
+    survey.totalVotes += 1;
+    await survey.save();
+    res.json(survey);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
 
 
 
