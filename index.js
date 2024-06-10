@@ -205,7 +205,7 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
-          role: 'pro-user'
+          role: 'surveyor'
         }
       }
       const result = await usersCollection.updateOne(filter, updatedDoc);
@@ -280,7 +280,11 @@ async function run() {
        res.send({paymentResult,role});
     })
 
-
+    // All surveyor data get
+    app.get('/payment/all', async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    });
 
 
     //surveys form letest 6
@@ -300,14 +304,23 @@ async function run() {
         const item = req.body;
         console.log(item);
         const filter = { _id: new ObjectId(item.SurveyID)}
+        const vote = item.vote==1?1:0;
+      
+        
+
+
         const survey = await surveysFormCollection.findOne(filter);
         const countVote =survey.totalVotes+1;
-        // console.log(countVote);
+        const yesVotes =survey.yesVotes+vote;
+       
+        console.log(yesVotes);
         
         // const filter = await surveysFormCollection.findOne(item.SurveyID);
         const updatedDoc = {
           $set: {
-            totalVotes: countVote
+            totalVotes: countVote,
+            yesVotes: yesVotes
+            
           }
         }
         
@@ -317,11 +330,11 @@ async function run() {
 
 
 
-        console.log(countVote);
+        // console.log(countVote);
 
         // await survey.save();
         // res.json(survey);
-        const result = await serveyVotingCollection.insertOne(item);
+         const result = await serveyVotingCollection.insertOne(item);
 
         res.send(result);
     });
@@ -330,6 +343,8 @@ async function run() {
     app.get('/vote/collection', async (req, res) => {
       try {
          
+
+        
           const topSex = [
               { $group: { _id: "$SurveyID", vote: { $sum: 1 } } },
               { $sort: { vote: -1 } },
