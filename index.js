@@ -443,6 +443,19 @@ app.get('/allSuryesPage', async (req, res) => {
   console.log(result);
 });
 
+// get a user info by email from db
+app.get('/participate/surveys/:email', async (req, res) => {
+  const email = req.params.email;
+  
+      const query = { email: email };
+  const result = await serveyVotingCollection.find(query).toArray();
+ 
+  res.send(result)
+})
+
+
+
+
 // Get surveys with filtering and sorting
 app.get('/surveys', async (req, res) => {
   try {
