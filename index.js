@@ -469,6 +469,22 @@ app.get('/participate/surveys-inapp/:email', async (req, res) => {
 })
 
 
+// app.get('/participate/surveys-Coment/:email', async (req, res) => {
+
+app.get('/participate/surveys-Coment/:email', async (req, res) => {
+  const email = req.params.email;
+  
+  const query = {
+    email: email,  
+    comments: { $ne: "" },
+      
+  };
+
+  const result = await serveyVotingCollection.find(query).toArray();
+ 
+  res.send(result)
+})
+
 
 // Get surveys with filtering and sorting
 app.get('/surveys', async (req, res) => {
