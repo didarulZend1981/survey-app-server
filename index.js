@@ -21,7 +21,10 @@ app.use(express.json())
 
 
 const corsOptions = {
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: ['http://localhost:5173', 
+           'https://survey-app-92e6f.web.app',
+           'https://survey-app-92e6f.firebaseapp.com'
+          ],
   credentials: true,
   optionSuccessStatus: 200,
 }
@@ -52,8 +55,9 @@ async function run() {
     const surveysFormCollection = client.db('SurveyApp').collection('surveysForm')
     const paymentCollection = client.db('SurveyApp').collection('payment')
     const serveyVotingCollection = client.db('SurveyApp').collection('serveyVoting')
+    const feedbackCollection = client.db('SurveyApp').collection('Feedback')
 
-
+    
 
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -313,6 +317,78 @@ async function run() {
 
 
 
+     //surveys form letest 6
+    // app.get('/topSixVoter', async (req, res) => {
+      
+    //   //Display the 6 most voted surveys from the database
+    //   const results = await surveysFormCollection.find({
+    //     deadline: { $lt: new Date() }
+    //   })
+    //   .sort({ totalVotes: -1 })
+    //   .limit(6)
+    //   .toArray();
+
+    //   res.send(results);
+    //   console.log(results);
+
+
+      
+    //   //Display 6 most recently created surveys from the database
+
+    //   const recentOpenSurveys = await surveysFormCollection.find({ deadline: { $gt: new Date() } })
+    //         .sort({ createDate: -1 }) // Assuming `createdAt` is the field for creation date
+    //         .limit(6)
+    //         .toArray();
+
+
+    //         // res.send(recentOpenSurveys);
+
+
+
+
+    // });
+    
+
+    app.get('/topSixVoter', async (req, res) => {
+      try {
+          // Fetch all documents to see if the collection is not empty
+          const allDocuments = await surveysFormCollection.find({}).toArray();
+          // console.log('All Documents:', allDocuments);
+  
+          // Check documents with deadline less than the current date
+          // const pastDeadlineDocuments = await surveysFormCollection.find({
+          //     deadline: { $gt: new Date(ISODate().getTime()) }
+          // }).toArray();
+          // console.log('Documents with past deadlines:', pastDeadlineDocuments);
+  
+          // // Fetch the top 6 most voted surveys where the deadline has passed
+          const results = await surveysFormCollection.find({
+
+              // deadline: { $gt: new Date() }
+          })
+          .sort({ totalVotes: -1 })
+          .limit(6)
+          .toArray();
+  
+          // Check the final results
+          console.log('Top 6 Results:', results);
+  
+          // Send the results with a 200 OK status
+          res.status(200).send(results);
+      } catch (error) {
+          // Send an error response with a 500 Internal Server Error status
+          res.status(500).send({ error: 'An error occurred while fetching the top six voted surveys' });
+      }
+  });
+  
+
+
+
+
+
+
+
+
     // servey Voting form
     app.post('/serveyVoting', async (req, res) => {
         const item = req.body;
@@ -486,6 +562,75 @@ app.get('/participate/surveys-Coment/:email', async (req, res) => {
 })
 
 
+
+
+
+
+ // FEED BACK
+ app.post('/api/feedback', async (req, res) => {
+  const item = req.body;
+  const filter = { _id: new ObjectId(item.surveyId)}
+  console.log(filter)
+
+  const updatedDoc = {
+    $set: {
+      status: 0,
+     
+      
+    }
+  }
+  
+  //filter ke  _id serch
+  const status = await surveysFormCollection.updateOne(filter, updatedDoc);
+  const result = await feedbackCollection.insertOne(req.body);
+  console.log(result);
+   res.send(result)
+
+})
+// All feedbackCollection data get
+     app.get('/all/feedback', async (req, res) => {
+      const result = await feedbackCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get('/all/feedback/:email', async (req, res) => {
+      const email = req.params.email;
+      
+      const query = {
+        email: email,  
+        
+          
+      };
+    
+      const result = await feedbackCollection.find(query).toArray();
+     
+      res.send(result)
+    })
+
+
+     // feedbackCollection single Id display
+    app.get('/feedback/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await feedbackCollection.findOne(query);
+      res.send(result);
+    })
+
+    // app.get('/feedback/:id', async (req, res) => {
+    //   const email = req.params.email;
+      
+    //   const query = {
+    //     email: email
+        
+          
+    //   };
+    
+    //   const result = await serveyVotingCollection.find(query).toArray();
+     
+    //   res.send(result)
+    // })
+
+
 // Get surveys with filtering and sorting
 app.get('/surveys', async (req, res) => {
   try {
@@ -553,10 +698,10 @@ app.post('/surveys/:id/vote', async (req, res) => {
 
 
 
-    await client.db('admin').command({ ping: 1 })
-    console.log(
-      'Pinged your deployment. You successfully connected to MongoDB!'
-    )
+    // await client.db('admin').command({ ping: 1 })
+    // console.log(
+    //   'Pinged your deployment. You successfully connected to MongoDB!'
+    // )
   } finally {
     // Ensures that the client will close when you finish/error
   }
