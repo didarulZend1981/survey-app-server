@@ -154,6 +154,21 @@ async function run() {
 
 
 
+    // users role api testig purpse------
+
+// // users role
+app.get('/all/user', async (req, res) => {
+  const role = req.query.role
+  const query = role?{ role: role }:{}
+  const result = await usersCollection.find(query).toArray();
+  res.send(result);
+});
+
+
+
+
+
+
 
     // users related api testig purpse------
     app.get('/surveyor', async (req, res) => {
@@ -304,6 +319,15 @@ async function run() {
       res.send(result);
     });
 
+    // get a paymentCollection by email from db
+app.get('/payment/:email', async (req, res) => {
+  const email = req.params.email;
+  
+      const query = { email: email };
+  const result = await paymentCollection.find(query).toArray();
+ 
+  res.send(result)
+})
 
     //surveys form letest 6
     app.get('/letest/surveyor', async (req, res) => {
