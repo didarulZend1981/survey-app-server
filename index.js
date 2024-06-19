@@ -221,6 +221,7 @@ app.get('/all/user', async (req, res) => {
     // role change pro-user
     app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id;
+      console.log()
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
@@ -514,6 +515,28 @@ app.get('/payment/:email', async (req, res) => {
 
 })
 
+app.get('/vote/:id', async (req, res) => {
+   
+
+  try {
+      
+     const SurveyID = req.params.id
+     const query = { SurveyID: SurveyID }
+     const yes = await serveyVotingCollection.find(query).toArray();
+    //  const queryNo = { SurveyID: SurveyID,vote:0 }
+    //  const no = await serveyVotingCollection.find(queryNo).toArray();
+    
+    console.log(SurveyID)
+    res.send(yes);
+     
+
+    } catch (error) {
+
+        console.error('Error:', error);
+        res.status(500).send('Internal Server Error');
+    }
+
+})
 
 // users related api testig purpse------
 app.get('/allSuryesPage', async (req, res) => {
